@@ -36,10 +36,20 @@ T Queue<T>::Dequeue() {
   if (Empty()) {
     throw std::underflow_error("Queue is empty!");
   }
+  
   T item = data[front];
   front = (front + 1) % capacity;
   --size;
   return item;
+}
+
+template <typename T>
+T Queue<T>::Front() const {
+  if (Empty()) {
+    throw std::underflow_error("Queue is empty!");
+  }
+
+  return data[front];
 }
 
 template <typename T>

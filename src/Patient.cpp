@@ -6,7 +6,7 @@ Patient::Patient(
   int year,
   int month,
   int day,
-  float hour,
+  double hour,
   int urgency,
   int hospitalMeasures,
   int laboratoryTests,
@@ -23,7 +23,6 @@ Patient::Patient(
     laboratoryTests(laboratoryTests),
     imagingTests(imagingTests),
     medicalSupplies(medicalSupplies),
-    nextServiceTime(0.0),
     triageTime(0.0),
     patientCareTime(0.0),
     hospitalMeasuresTime(0.0),
@@ -44,11 +43,11 @@ void Patient::Print() const {
             << " " << laboratoryTests
             << " " << imagingTests
             << " " << medicalSupplies
-            << " " << hospitalMeasuresTime
-            << " " << laboratoryTestsTime
-            << " " << imagingTestsTime
-            << " " << medicalSuppliesTime
-            << " " << waitingTime
+            //<< " " << hospitalMeasuresTime
+            //<< " " << laboratoryTestsTime
+            //<< " " << imagingTestsTime
+            //<< " " << medicalSuppliesTime
+            << "        " << waitingTime
             << " " << serviceTime
             << " " << state
             << std::endl;

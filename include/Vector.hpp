@@ -21,6 +21,7 @@ public:
 
   void push(const T& value);
   T pop();
+  void pop(int index);
   T* begin();
   T* end();
   const T* begin() const;
@@ -32,6 +33,7 @@ public:
   // Operadores de acesso
   T& operator[](int index);
   const T& operator[](int index) const;
+  const T& back() const; 
 
   // Métodos utilitários
   int getSize() const;

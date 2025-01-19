@@ -13,13 +13,14 @@ private:
   int capacity;    
 
 public:
-  Queue(int maxCapacity = 100);
+  Queue(int maxCapacity = 5000);
   ~Queue();
 
   int GetSize() const;
   bool Empty() const;
   void Enqueue(T item);
   T Dequeue();
+  T Front() const;
   void Clear();
 };
 

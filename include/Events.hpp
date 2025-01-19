@@ -1,22 +1,35 @@
 #ifndef EVENTS_HPP
 #define EVENTS_HPP
 
-#include <vector>
+#include "Vector.hpp"
 #include <stdexcept>
 using namespace std;
 
 struct Event {
-  int hour;
+  int id;
+  double hour;
   int day;
   int month;
   int year;
 
-  Event(int h, int d, int m, int a) : hour(h), day(d), month(m), year(a) {}
+  Event(int id, double h, int d, int m, int a) : 
+    id(id), 
+    hour(h), 
+    day(d), 
+    month(m), 
+    year(a){}
+
+  Event() : 
+    id(0), 
+    hour(0), 
+    day(0), 
+    month(0), 
+    year(0) {}
 };
 
 class Events {
 private:
-  vector<Event> heap;
+  Vector<Event> heap;
 
   void heapifyDown(int index);
   void heapifyUp(int index);
@@ -25,7 +38,7 @@ private:
 
 public:
 
-  void push(const Event& evento);
+  void push(const Event& event);
   Event top();
   void pop();
   bool empty() const;

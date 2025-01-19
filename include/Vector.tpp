@@ -79,6 +79,19 @@ T Vector<T>::pop() {
   return removedElement;
 }
 
+// Remove o elemento do vetor correspondente ao índice informado
+template <typename T>
+void Vector<T>::pop(int index) {
+  if (index < 0 || index >= size) {
+    throw std::out_of_range("Índice fora do intervalo!");
+  }
+
+  for (int i = index; i < size - 1; ++i) {
+    data[i] = data[i + 1];
+  }
+  --size;
+}
+
 // Métodos begin e end
 template <typename T>
 T* Vector<T>::begin() { return data; }
@@ -110,6 +123,12 @@ const T& Vector<T>::operator[](int index) const {
   }
 
   return data[index];
+}
+
+// Retorna o último elemento
+template <typename T>
+const T& Vector<T>::back() const {
+  return data[size - 1];
 }
 
 // Retorna o tamanho lógico

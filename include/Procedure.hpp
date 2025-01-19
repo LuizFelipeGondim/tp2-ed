@@ -10,11 +10,10 @@ private:
   
 public:
   Vector<Patient*> units;
-  float averageTime;
+  double averageTime;
   int numberUnits;
 
-  Procedure(float averageTime, int numberUnits);
-  ~Procedure();
+  Procedure(double averageTime, int numberUnits);
 
   int HasSpace();
 

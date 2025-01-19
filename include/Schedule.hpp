@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include "Queue.hpp"
+#include "Events.hpp"
 #include "Vector.hpp"
 #include "Patient.hpp"
 #include "Procedure.hpp"
@@ -15,8 +16,11 @@ struct Clock{
 
 class Schedule {
 private:
-  Clock clock;
+  //Verificar se ta sendo usado alem do construtor
   int numberPatients = 0;
+
+  Clock clock;
+  Events events;
   Vector<Procedure*> procedures;
   Vector<Patient*> patients;
 
@@ -30,8 +34,15 @@ private:
 
   //Filas de pós atendimento
   Queue<Patient*> serviceMildQueue;
-  Queue<Patient*> serviceCModerateQueue;
+  Queue<Patient*> serviceModerateQueue;
   Queue<Patient*> serviceSevereQueue;
+
+  void HandleTriageQueue(Clock clock);
+  void HandlePatientCare(Clock clock);
+  void HandleHospitalMeasures(Clock clock);
+  void HandleLaboratoryTests(Clock clock);
+  void HandleImagingTests(Clock clock);
+  void HandleMedicalSupplies(Clock clock);
   
 public:
 

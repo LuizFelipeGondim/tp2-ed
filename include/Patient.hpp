@@ -12,23 +12,22 @@ public:
   int year;
   int month;
   int day;
-  float hour;
+  double hour;
   int urgency;
   int hospitalMeasures;
   int laboratoryTests;
   int imagingTests;
   int medicalSupplies;
 
-  float nextServiceTime;
-  float triageTime;
-  float patientCareTime;
-  float hospitalMeasuresTime;
-  float laboratoryTestsTime;
-  float imagingTestsTime;
-  float medicalSuppliesTime;
+  double triageTime;
+  double patientCareTime;
+  double hospitalMeasuresTime;
+  double laboratoryTestsTime;
+  double imagingTestsTime;
+  double medicalSuppliesTime;
 
-  float waitingTime;
-  float serviceTime;
+  double waitingTime;
+  double serviceTime;
   
   int state;
 
@@ -38,7 +37,7 @@ public:
     int year = 0,
     int month = 0,
     int day = 0,
-    float hour = 0,
+    double hour = 0.0,
     int urgency = 0,
     int hospitalMeasures = 0,
     int laboratoryTests = 0,
