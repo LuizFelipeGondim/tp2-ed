@@ -12,11 +12,12 @@
 struct Clock{
   double hour;
   int day;
+  int month;
+  int year;
 };
 
 class Schedule {
 private:
-  //Verificar se ta sendo usado alem do construtor
   int numberPatients = 0;
 
   Clock clock;
@@ -37,20 +38,25 @@ private:
   Queue<Patient*> serviceModerateQueue;
   Queue<Patient*> serviceSevereQueue;
 
-  void HandleTriageQueue(Clock clock);
-  void HandlePatientCare(Clock clock);
-  void HandleHospitalMeasures(Clock clock);
-  void HandleLaboratoryTests(Clock clock);
-  void HandleImagingTests(Clock clock);
-  void HandleMedicalSupplies(Clock clock);
-  
+  void handleTriageQueue(Clock clock);
+  void handlePatientCare(Clock clock);
+  void handleHospitalMeasures(Clock clock);
+  void handleLaboratoryTests(Clock clock);
+  void handleImagingTests(Clock clock);
+  void handleMedicalSupplies(Clock clock);
+
+  bool isLeapYear(int year);
+  void insertEvent(int id, Clock clock, double serviceTime);
+  double convertToTotalHours(Clock date);
+  double convertToTotalHours(Date date);
+  void startSimulation();
+
 public:
 
   Schedule(std::string fileName);
   ~Schedule();
 
-  void StartSimulation();
-  void Print();
+  void print();
 };
 
 #endif

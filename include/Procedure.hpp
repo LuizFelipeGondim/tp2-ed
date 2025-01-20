@@ -15,7 +15,7 @@ public:
 
   Procedure(double averageTime, int numberUnits);
 
-  int HasSpace();
+  int hasSpace();
 
 };
 

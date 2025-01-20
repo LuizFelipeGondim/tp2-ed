@@ -2,6 +2,15 @@
 #define PATIENT_HPP
 
 #include <iostream>
+#include <iomanip>
+#include <string>
+
+struct Date {
+  double hour;
+  int day;
+  int month;
+  int year;
+};
 
 class Patient {
 private:
@@ -19,12 +28,12 @@ public:
   int imagingTests;
   int medicalSupplies;
 
-  double triageTime;
-  double patientCareTime;
-  double hospitalMeasuresTime;
-  double laboratoryTestsTime;
-  double imagingTestsTime;
-  double medicalSuppliesTime;
+  Date triageTime;
+  Date patientCareTime;
+  Date hospitalMeasuresTime;
+  Date laboratoryTestsTime;
+  Date imagingTestsTime;
+  Date medicalSuppliesTime;
 
   double waitingTime;
   double serviceTime;
@@ -45,7 +54,10 @@ public:
     int medicalSupplies = 0
   );
 
-  void Print() const;
+  void print();
+  std::string getMonthName(int month);
+  std::string getWeekdayName(int year, int month, int day);
+  std::string formatHour(double hour);
 };
 
 #endif

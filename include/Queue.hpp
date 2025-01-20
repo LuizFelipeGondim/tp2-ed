@@ -8,7 +8,7 @@ template <typename T>
 class Queue {
 private:
   T* data; 
-  int front;       
+  int elementFront;       
   int size;        
   int capacity;    
 
@@ -16,12 +16,12 @@ public:
   Queue(int maxCapacity = 5000);
   ~Queue();
 
-  int GetSize() const;
-  bool Empty() const;
-  void Enqueue(T item);
-  T Dequeue();
-  T Front() const;
-  void Clear();
+  int getSize() const;
+  bool empty() const;
+  void enqueue(T item);
+  T dequeue();
+  T front() const;
+  void clear();
 };
 
 #include "Queue.tpp"

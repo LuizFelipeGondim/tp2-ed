@@ -1,5 +1,6 @@
 #include "Schedule.hpp"
 
+// Efetua a leitura dos dados
 Schedule::Schedule(std::string fileName) {
   std::ifstream file(fileName);
 
@@ -44,12 +45,17 @@ Schedule::~Schedule() {
     delete patients[i];
 }
 
-void Schedule::StartSimulation() {
+// Inicia a simulação do escalonador adicionando um evento pra cada paciente
+// Depois ele vai analisando os estados do paciente e as situações das filas
+// Dependendo desses fatores, um novo evento é adicionado no escalonador
+// A simulação acaba quando não houver mais eventos a serem analisados ou as filas estiverem vazias
+void Schedule::startSimulation() {
   bool finishSimulation = false;
 
   if (patients.getSize() == 0)
     finishSimulation = true;
   
+  // Inicia eventos com os pacientes
   int size = patients.getSize();
   for (int i = 0; i < size; i++) {
     events.push(Event(
@@ -63,35 +69,48 @@ void Schedule::StartSimulation() {
 
   while(!finishSimulation) {
     int hasSpace;
+
+    // Altera o tempo do relógio
     Event event = events.top();
     clock.hour = event.hour;
+    clock.day = event.day;
+    clock.month = event.month;
+    clock.year = event.year;
 
+    // Seleciona paciente do evento
     Patient* patient;
     for (int i = 0; i < patients.getSize(); i++)
       if (event.id == patients[i]->id) 
         patient = patients[i];
 
-    std::cout << event.id << " " << clock.hour << std::endl;
-
+    // Adiciona paciente na fila de triagem
+    // O tempo de entrada na fila também é calculado
     if (patient->state == 1) {
       patient->state++;
-      patient->triageTime = clock.hour; // Ajustar pra mudança de dia e mês
-      triageQueue.Enqueue(patient);
+      patient->triageTime.hour = clock.hour;
+      patient->triageTime.day = clock.day;
+      patient->triageTime.month = clock.month;
+      patient->triageTime.year = clock.year;
+      triageQueue.enqueue(patient);
     }
     
     if (patient->state == 3) {
 
       // Verifica se algum paciente já terminou a triagem.
       // Se terminou, ele é mandado para a fila de espera do atendimento.
+      // O tempo de entrada na fila também é calculado
       patient->state++;
-      patient->patientCareTime = clock.hour; // Ajustar pra mudança de dia e mês
+      patient->patientCareTime.hour = clock.hour;
+      patient->patientCareTime.day = clock.day;
+      patient->patientCareTime.month = clock.month;
+      patient->patientCareTime.year = clock.year;
 
       if (patient->urgency == 0) {
-        patientCareMildQueue.Enqueue(patient);
+        patientCareMildQueue.enqueue(patient);
       } else if (patient->urgency == 1) {
-        patientCareModerateQueue.Enqueue(patient);
+        patientCareModerateQueue.enqueue(patient);
       } else if (patient->urgency == 2) {
-        patientCareSevereQueue.Enqueue(patient);
+        patientCareSevereQueue.enqueue(patient);
       } 
 
       for (int i = 0; i < procedures[0]->units.getSize(); i++)
@@ -99,159 +118,191 @@ void Schedule::StartSimulation() {
           procedures[0]->units.pop(i);
     }
 
-    // Verifica se algum paciente terminou alguns dos serviços.
-    // Se terminou, ele é encaminhado pra sua fila.
-    
-    if (patient->state >= 5 && patient->state <= 13) {
+    // Verifica se o paciente recebeu alta, caso não, ele é encaminhado para sua fila
+    // O tempo de entrada na fila também é calculado
+    if (patient->state == 5) {
 
-      // Verifica se o paciente teve alta, caso afirmativo, seu atendimento é encerrado.
-      // Caso não tenha recebido alta, ele será transferido para as outras filas de prioridade.
-      if (patient->state == 5 && patient->discharged) {
-        if (patient->state == 5) {
-          for (int i = 0; i < procedures[1]->units.getSize(); i++)
-            if (patient->id == procedures[1]->units[i]->id)
-              procedures[1]->units.pop(i);
-        }
+      for (int i = 0; i < procedures[1]->units.getSize(); i++)
+        if (patient->id == procedures[1]->units[i]->id)
+          procedures[1]->units.pop(i);
+
+      if (patient->discharged) {
         patient->state = 14;
-      } else {
-        
-        // Pula estado caso a quantidade de um serviço é zero 
-        if (patient->state == 5) {
-          for (int i = 0; i < procedures[1]->units.getSize(); i++)
-            if (patient->id == procedures[1]->units[i]->id)
-              procedures[1]->units.pop(i);
-        }
-
-        if (patient->state == 5 && patient->hospitalMeasures == 0)
-          patient->state = 7;
-
-        if (patient->state == 7) {
-          for (int i = 0; i < procedures[2]->units.getSize(); i++)
-            if (patient->id == procedures[2]->units[i]->id)
-              procedures[2]->units.pop(i);
-        }
-
-        if (patient->state == 7 && patient->laboratoryTests == 0)
-          patient->state = 9;
-        
-        if (patient->state == 9) {
-        for (int i = 0; i < procedures[3]->units.getSize(); i++)
-          if (patient->id == procedures[3]->units[i]->id)
-            procedures[3]->units.pop(i);
-        }
-
-        if (patient->state == 9 && patient->imagingTests == 0)
-          patient->state = 11;
-        
-        if (patient->state == 11) {
-          for (int i = 0; i < procedures[4]->units.getSize(); i++)
-            if (patient->id == procedures[4]->units[i]->id)
-              procedures[4]->units.pop(i);
-        }
-
-        if (patient->state == 11 && patient->medicalSupplies == 0)
-          patient->state = 13;
-
-        if (patient->state == 13)
-        for (int i = 0; i < procedures[5]->units.getSize(); i++)
-          if (patient->id == procedures[5]->units[i]->id)
-            procedures[5]->units.pop(i);
-
+      } else if (patient->hospitalMeasures > 0) { // Verifica se paciente pode pular estado
         patient->state++;
+        patient->hospitalMeasuresTime.hour = clock.hour;
+        patient->hospitalMeasuresTime.day = clock.day;
+        patient->hospitalMeasuresTime.month = clock.month;
+        patient->hospitalMeasuresTime.year = clock.year;
 
-        // Encaminha pacientes que ainda precisam ir ser atendidos para as filas
-        if (patient->state < 13) {
-          if (patient->urgency == 0) {
-            serviceMildQueue.Enqueue(patient);
-          } else if (patient->urgency == 1) {
-            serviceModerateQueue.Enqueue(patient);
-          } else if (patient->urgency == 2) {
-            serviceSevereQueue.Enqueue(patient);
-          }
+        if (patient->urgency == 0) {
+          serviceMildQueue.enqueue(patient);
+        } else if (patient->urgency == 1) {
+          serviceModerateQueue.enqueue(patient);
+        } else if (patient->urgency == 2) {
+          serviceSevereQueue.enqueue(patient);
         }
-
-        if (patient->state == 6) 
-          patient->hospitalMeasuresTime = clock.hour; // Ajustar pra mudança de dia e mês
-
-        if (patient->state == 8) 
-          patient->laboratoryTestsTime = clock.hour; // Ajustar pra mudança de dia e mês
-        
-        if (patient->state == 10) 
-          patient->imagingTestsTime = clock.hour; // Ajustar pra mudança de dia e mês
-
-        if (patient->state == 12) 
-          patient->medicalSuppliesTime = clock.hour; // Ajustar pra mudança de dia e mês
+      } else {
+        patient->state = 7;
       }
     }
+
+    // Encaminha e calcula entrada do paciente na fila de serviços, com estado 7
+    if (patient->state == 7) {
+      for (int i = 0; i < procedures[2]->units.getSize(); i++)
+        if (patient->id == procedures[2]->units[i]->id)
+          procedures[2]->units.pop(i);
+
+      if (patient->laboratoryTests > 0) { // Verifica se paciente pode pular estado
+        patient->state++;
+        patient->laboratoryTestsTime.hour = clock.hour;
+        patient->laboratoryTestsTime.day = clock.day;
+        patient->laboratoryTestsTime.month = clock.month;
+        patient->laboratoryTestsTime.year = clock.year;
+
+        if (patient->urgency == 0) {
+          serviceMildQueue.enqueue(patient);
+        } else if (patient->urgency == 1) {
+          serviceModerateQueue.enqueue(patient);
+        } else if (patient->urgency == 2) {
+          serviceSevereQueue.enqueue(patient);
+        }
+      } else {
+        patient->state = 9;
+      }
+    }
+
+    // Encaminha e calcula entrada do paciente na fila de serviços, com estado 9
+    if (patient->state == 9) {
+      for (int i = 0; i < procedures[3]->units.getSize(); i++)
+        if (patient->id == procedures[3]->units[i]->id)
+          procedures[3]->units.pop(i);
+
+      if (patient->imagingTests > 0) { // Verifica se paciente pode pular estado
+        patient->state++;
+        patient->imagingTestsTime.hour = clock.hour;
+        patient->imagingTestsTime.day = clock.day;
+        patient->imagingTestsTime.month = clock.month;
+        patient->imagingTestsTime.year = clock.year;
+
+        if (patient->urgency == 0) {
+          serviceMildQueue.enqueue(patient);
+        } else if (patient->urgency == 1) {
+          serviceModerateQueue.enqueue(patient);
+        } else if (patient->urgency == 2) {
+          serviceSevereQueue.enqueue(patient);
+        }
+      } else {
+        patient->state = 11;
+      }
+    }
+
+    // Encaminha e calcula entrada do paciente na fila de serviços, com estado 12
+    if (patient->state == 11) {
+      for (int i = 0; i < procedures[4]->units.getSize(); i++)
+        if (patient->id == procedures[4]->units[i]->id)
+          procedures[4]->units.pop(i);
+
+      if (patient->medicalSupplies > 0) { // Verifica se paciente pode pular estado
+        patient->state++;
+        patient->medicalSuppliesTime.hour = clock.hour;
+        patient->medicalSuppliesTime.day = clock.day;
+        patient->medicalSuppliesTime.month = clock.month;
+        patient->medicalSuppliesTime.year = clock.year;
+
+        if (patient->urgency == 0) {
+          serviceMildQueue.enqueue(patient);
+        } else if (patient->urgency == 1) {
+          serviceModerateQueue.enqueue(patient);
+        } else if (patient->urgency == 2) {
+          serviceSevereQueue.enqueue(patient);
+        }
+      } else {
+        patient->state = 13;
+      }
+    }
+
+    // Alta hospitalar
+    if (patient->state == 13) {
+      for (int i = 0; i < procedures[5]->units.getSize(); i++)
+        if (patient->id == procedures[5]->units[i]->id)
+          procedures[5]->units.pop(i);
+
+      patient->state++;
+    }  
 
     // Verifica se tem espaço no serviço de triagem, se tiver, envia o primeiro da fila. 
-    hasSpace = procedures[0]->HasSpace();
+    hasSpace = procedures[0]->hasSpace();
     if (hasSpace > 0) {
       for (int i = 0; i < hasSpace; i++) {
-        if (!triageQueue.Empty()) {
-          HandleTriageQueue(clock);
+        if (!triageQueue.empty()) {
+          handleTriageQueue(clock);
         }
       }
     }
-
-    hasSpace = procedures[1]->HasSpace();
-    std::cout << hasSpace << std::endl;
+    
+    // Verifica se tem espaço no serviço de atendimento, se tiver, envia o primeiro da fila. 
+    hasSpace = procedures[1]->hasSpace();
     if (hasSpace > 0) {
       for (int i = 0; i < hasSpace; i++) {
-        HandlePatientCare(clock);
+        handlePatientCare(clock);
       }
     }
 
-    hasSpace = procedures[2]->HasSpace();
+    // Verifica se tem espaço no serviço de medidas hospitalares, se tiver, envia o primeiro da fila. 
+    hasSpace = procedures[2]->hasSpace();
     if (hasSpace > 0) {
       for (int i = 0; i < hasSpace; i++) {
-        HandleHospitalMeasures(clock);
+        handleHospitalMeasures(clock);
       }
     }
 
-    hasSpace = procedures[3]->HasSpace();
+    // Verifica se tem espaço no serviço de testes laboratoriais, se tiver, envia o primeiro da fila. 
+    hasSpace = procedures[3]->hasSpace();
     if (hasSpace > 0) {
       for (int i = 0; i < hasSpace; i++) {
-        HandleLaboratoryTests(clock);
+        handleLaboratoryTests(clock);
       }
     }
     
-
-    hasSpace = procedures[4]->HasSpace();
+    // Verifica se tem espaço no serviço de testes de imagem, se tiver, envia o primeiro da fila. 
+    hasSpace = procedures[4]->hasSpace();
     if (hasSpace > 0) {
       for (int i = 0; i < hasSpace; i++) {
-        HandleImagingTests(clock);
+        handleImagingTests(clock);
       }
     }
 
-    hasSpace = procedures[5]->HasSpace();
+    // Verifica se tem espaço no serviço de suprimentos médicos, se tiver, envia o primeiro da fila. 
+    hasSpace = procedures[5]->hasSpace();
     if (hasSpace > 0) {
       for (int i = 0; i < hasSpace; i++) {
-        HandleMedicalSupplies(clock);
+        handleMedicalSupplies(clock);
       }
     }
 
     events.pop();
 
+    // Verifica se ainda há eventos e se hś alguem em alguma fila
     if (events.empty()) {
 
-      if (!triageQueue.Empty()) {
-        HandleTriageQueue(clock);
+      if (!triageQueue.empty()) {
+        handleTriageQueue(clock);
       } else if (
-        !patientCareMildQueue.Empty() || 
-        !patientCareModerateQueue.Empty() || 
-        !patientCareSevereQueue.Empty()
+        !patientCareMildQueue.empty() || 
+        !patientCareModerateQueue.empty() || 
+        !patientCareSevereQueue.empty()
       ) {
-        HandlePatientCare(clock);
+        handlePatientCare(clock);
       } else if (
-        !serviceMildQueue.Empty() || 
-        !serviceModerateQueue.Empty() || 
-        !serviceSevereQueue.Empty()
+        !serviceMildQueue.empty() || 
+        !serviceModerateQueue.empty() || 
+        !serviceSevereQueue.empty()
       ) {
-        HandleHospitalMeasures(clock);
-        HandleLaboratoryTests(clock);
-        HandleImagingTests(clock);
-        HandleMedicalSupplies(clock);
+        handleHospitalMeasures(clock);
+        handleLaboratoryTests(clock);
+        handleImagingTests(clock);
+        handleMedicalSupplies(clock);
       } else {
         finishSimulation = true;
       }
@@ -260,181 +311,263 @@ void Schedule::StartSimulation() {
   }
 }
 
-void Schedule::HandleTriageQueue(Clock clock) {
-  Patient* patientTriage = triageQueue.Dequeue();
+// Verifica se a fila de triagem está vazia.
+// Se estiver, o paciente é retirado da fila para atualizar suas estatísticas 
+// Depois um novo evento é inserido
+void Schedule::handleTriageQueue(Clock clock) {
+  Patient* patientTriage = triageQueue.dequeue();
 
-  patientTriage->waitingTime += clock.hour - patientTriage->triageTime; // Ajustar pra mudança de dia e mês
+  patientTriage->waitingTime += convertToTotalHours(clock) - 
+                                  convertToTotalHours(patientTriage->triageTime);
   patientTriage->serviceTime += procedures[0]->averageTime;
   patientTriage->state++;
   procedures[0]->units.push(patientTriage);
 
-  events.push(Event(
+  insertEvent(
     patientTriage->id,
-    clock.hour + procedures[0]->averageTime, // Ajustar pra mudança de dia e mês
-    patientTriage->day,
-    patientTriage->month,
-    patientTriage->year
-  ));
+    clock,
+    procedures[0]->averageTime
+  );
 }
 
-void Schedule::HandlePatientCare(Clock clock) {
+// Verifica se as filas de atendimento estão vazias
+// Se estiver, ele é retirado da fila para atualizar suas estatísticas e depois um novo evento é inserido
+void Schedule::handlePatientCare(Clock clock) {
   Patient* patientCare = nullptr;
   
-  if (!patientCareSevereQueue.Empty()) {
-    patientCare = patientCareSevereQueue.Dequeue();
-  } else if (!patientCareModerateQueue.Empty()) {
-    patientCare = patientCareModerateQueue.Dequeue();
-  } else if (!patientCareMildQueue.Empty()) {
-    patientCare = patientCareMildQueue.Dequeue();
+  if (!patientCareSevereQueue.empty()) {
+    patientCare = patientCareSevereQueue.dequeue();
+  } else if (!patientCareModerateQueue.empty()) {
+    patientCare = patientCareModerateQueue.dequeue();
+  } else if (!patientCareMildQueue.empty()) {
+    patientCare = patientCareMildQueue.dequeue();
   }
 
   if (patientCare != nullptr) {
-    patientCare->waitingTime += clock.hour - patientCare->patientCareTime; // Ajustar pra mudança de dia e mês
+    patientCare->waitingTime += convertToTotalHours(clock) - 
+                                  convertToTotalHours(patientCare->patientCareTime);
     patientCare->serviceTime += procedures[1]->averageTime;
     patientCare->state++;
     procedures[1]->units.push(patientCare);
 
-    events.push(Event(
+    insertEvent(
       patientCare->id,
-      clock.hour + procedures[1]->averageTime, // Ajustar pra mudança de dia e mês
-      patientCare->day,
-      patientCare->month,
-      patientCare->year
-    ));
+      clock,
+      procedures[1]->averageTime
+    );
   }
 }
 
-void Schedule::HandleHospitalMeasures(Clock clock) {
+// Verifica se as filas de serviço estão vazias e o estado do paciente é igual a 6
+// Se for, ele é retirado da fila para atualizar suas estatísticas e depois um novo evento é inserido
+void Schedule::handleHospitalMeasures(Clock clock) {
   Patient* patientService = nullptr;
         
-  if (!serviceSevereQueue.Empty()) {
-    patientService = serviceSevereQueue.Front();
-    if (patientService->state == 6) serviceSevereQueue.Dequeue();
-  } else if (!serviceModerateQueue.Empty()) {
-    patientService = serviceModerateQueue.Front();
-    if (patientService->state == 6) serviceModerateQueue.Dequeue();
-  } else if (!serviceMildQueue.Empty()) {
-    patientService = serviceMildQueue.Front();
-    if (patientService->state == 6) serviceMildQueue.Dequeue();
+  if (!serviceSevereQueue.empty()) {
+    patientService = serviceSevereQueue.front();
+    if (patientService->state == 6) serviceSevereQueue.dequeue();
+  } else if (!serviceModerateQueue.empty()) {
+    patientService = serviceModerateQueue.front();
+    if (patientService->state == 6) serviceModerateQueue.dequeue();
+  } else if (!serviceMildQueue.empty()) {
+    patientService = serviceMildQueue.front();
+    if (patientService->state == 6) serviceMildQueue.dequeue();
   }
 
   if (patientService != nullptr && patientService->state == 6) {
-    patientService->waitingTime += clock.hour - patientService->hospitalMeasuresTime; // Ajustar pra mudança de dia e mês
+    patientService->waitingTime += convertToTotalHours(clock) - 
+                                  convertToTotalHours(patientService->hospitalMeasuresTime);
     patientService->serviceTime += patientService->hospitalMeasures * procedures[2]->averageTime;
     patientService->state++;
     procedures[2]->units.push(patientService);
 
-    events.push(Event(
+    insertEvent(
       patientService->id,
-      clock.hour + (patientService->hospitalMeasures * procedures[2]->averageTime), // Ajustar pra mudança de dia e mês
-      patientService->day,
-      patientService->month,
-      patientService->year
-    ));
+      clock,
+      (patientService->hospitalMeasures * procedures[2]->averageTime)
+    );
   }
 } 
 
-void Schedule::HandleLaboratoryTests(Clock clock) {
+// Verifica se as filas de serviço estão vazias e o estado do paciente é igual a 8
+// Se for, ele é retirado da fila para atualizar suas estatísticas e depois um novo evento é inserido
+void Schedule::handleLaboratoryTests(Clock clock) {
   Patient* patientService = nullptr;
   
-  if (!serviceSevereQueue.Empty()) {
-    patientService = serviceSevereQueue.Front();
-    if (patientService->state == 8) serviceSevereQueue.Dequeue();
-  } else if (!serviceModerateQueue.Empty()) {
-    patientService = serviceModerateQueue.Front();
-    if (patientService->state == 8) serviceModerateQueue.Dequeue();
-  } else if (!serviceMildQueue.Empty()) {
-    patientService = serviceMildQueue.Front();
-    if (patientService->state == 8) serviceMildQueue.Dequeue();
+  if (!serviceSevereQueue.empty()) {
+    patientService = serviceSevereQueue.front();
+    if (patientService->state == 8) serviceSevereQueue.dequeue();
+  } else if (!serviceModerateQueue.empty()) {
+    patientService = serviceModerateQueue.front();
+    if (patientService->state == 8) serviceModerateQueue.dequeue();
+  } else if (!serviceMildQueue.empty()) {
+    patientService = serviceMildQueue.front();
+    if (patientService->state == 8) serviceMildQueue.dequeue();
   }
 
   if (patientService != nullptr && patientService->state == 8) {
-    patientService->waitingTime += clock.hour - patientService->laboratoryTestsTime; // Ajustar pra mudança de dia e mês
+    patientService->waitingTime += convertToTotalHours(clock) - 
+                                  convertToTotalHours(patientService->laboratoryTestsTime);
     patientService->serviceTime += patientService->laboratoryTests * procedures[3]->averageTime;
     patientService->state++;
     procedures[3]->units.push(patientService);
 
-    events.push(Event(
+    insertEvent(
       patientService->id,
-      clock.hour + (patientService->laboratoryTests * procedures[3]->averageTime), // Ajustar pra mudança de dia e mês
-      patientService->day,
-      patientService->month,
-      patientService->year
-    ));
+      clock,
+      (patientService->laboratoryTests * procedures[3]->averageTime)
+    );
   }
 } 
 
-void Schedule::HandleImagingTests(Clock clock) {
+// Verifica se as filas de serviço estão vazias e o estado do paciente é igual a 10
+// Se for, ele é retirado da fila para atualizar suas estatísticas e depois um novo evento é inserido
+void Schedule::handleImagingTests(Clock clock) {
   Patient* patientService = nullptr;
   
-  if (!serviceSevereQueue.Empty()) {
-    patientService = serviceSevereQueue.Front();
-    if (patientService->state == 10) serviceSevereQueue.Dequeue();
-  } else if (!serviceModerateQueue.Empty()) {
-    patientService = serviceModerateQueue.Front();
-    if (patientService->state == 10) serviceModerateQueue.Dequeue();
-  } else if (!serviceMildQueue.Empty()) {
-    patientService = serviceMildQueue.Front();
-    if (patientService->state == 10) serviceMildQueue.Dequeue();
+  if (!serviceSevereQueue.empty()) {
+    patientService = serviceSevereQueue.front();
+    if (patientService->state == 10) serviceSevereQueue.dequeue();
+  } else if (!serviceModerateQueue.empty()) {
+    patientService = serviceModerateQueue.front();
+    if (patientService->state == 10) serviceModerateQueue.dequeue();
+  } else if (!serviceMildQueue.empty()) {
+    patientService = serviceMildQueue.front();
+    if (patientService->state == 10) serviceMildQueue.dequeue();
   }
 
   if (patientService != nullptr && patientService->state == 10) {
-    patientService->waitingTime += clock.hour - patientService->imagingTestsTime; // Ajustar pra mudança de dia e mês
+    patientService->waitingTime += convertToTotalHours(clock) - 
+                                  convertToTotalHours(patientService->imagingTestsTime);
     patientService->serviceTime += patientService->imagingTests * procedures[4]->averageTime;
     patientService->state++;
     procedures[4]->units.push(patientService);
 
-    events.push(Event(
+    insertEvent(
       patientService->id,
-      clock.hour + (patientService->imagingTests * procedures[4]->averageTime), // Ajustar pra mudança de dia e mês
-      patientService->day,
-      patientService->month,
-      patientService->year
-    ));
+      clock,
+      (patientService->imagingTests * procedures[4]->averageTime)
+    );
+
   }
 } 
 
-void Schedule::HandleMedicalSupplies(Clock clock) {
+// Verifica se as filas de serviço estão vazias e o estado do paciente é igual a 12
+// Se for, ele é retirado da fila para atualizar suas estatísticas e depois um novo evento é inserido
+void Schedule::handleMedicalSupplies(Clock clock) {
   Patient* patientService = nullptr;
   
-  if (!serviceSevereQueue.Empty()) {
-    patientService = serviceSevereQueue.Front();
-    if (patientService->state == 12) serviceSevereQueue.Dequeue();
-  } else if (!serviceModerateQueue.Empty()) {
-    patientService = serviceModerateQueue.Front();
-    if (patientService->state == 12) serviceModerateQueue.Dequeue();
-  } else if (!serviceMildQueue.Empty()) {
-    patientService = serviceMildQueue.Front();
-    if (patientService->state == 12) serviceMildQueue.Dequeue();
+  if (!serviceSevereQueue.empty()) {
+    patientService = serviceSevereQueue.front();
+    if (patientService->state == 12) serviceSevereQueue.dequeue();
+  } else if (!serviceModerateQueue.empty()) {
+    patientService = serviceModerateQueue.front();
+    if (patientService->state == 12) serviceModerateQueue.dequeue();
+  } else if (!serviceMildQueue.empty()) {
+    patientService = serviceMildQueue.front();
+    if (patientService->state == 12) serviceMildQueue.dequeue();
   }
 
   if (patientService != nullptr && patientService->state == 12) {
-    patientService->waitingTime += clock.hour - patientService->medicalSuppliesTime; // Ajustar pra mudança de dia e mês
+    patientService->waitingTime += convertToTotalHours(clock) - 
+                                  convertToTotalHours(patientService->medicalSuppliesTime);
     patientService->serviceTime += patientService->medicalSupplies * procedures[5]->averageTime;
     patientService->state++;
     procedures[5]->units.push(patientService);
 
-    events.push(Event(
+    insertEvent(
       patientService->id,
-      clock.hour + (patientService->medicalSupplies * procedures[5]->averageTime), // Ajustar pra mudança de dia e mês
-      patientService->day,
-      patientService->month,
-      patientService->year
-    ));
+      clock,
+      (patientService->medicalSupplies * procedures[5]->averageTime)
+    );
   }
 } 
 
-void Schedule::Print() {
-  StartSimulation();
+// Insere um evento no escalonador fazendo as devidas conversões de tempo 
+void Schedule::insertEvent(int id, Clock clock, double increment) {
+  const int daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
-  /*
-  while (!events.empty()) {
-    Event e = events.top();
-    std::cout << "Evento: id " << e.id << " " << e.hour << "h, " << e.day << "/" << e.month << "/" << e.year << std::endl;
-    events.pop();
-  }*/
+  clock.hour += increment;
+
+  while (clock.hour >= 24.0) {
+    clock.hour -= 24.0;
+    clock.day++;
+  }
+
+  while (true) {
+    int daysInCurrentMonth = daysInMonth[clock.month - 1];
+    if (clock.month == 2 && isLeapYear(clock.year))
+      daysInCurrentMonth = 29;
+
+    if (clock.day <= daysInCurrentMonth)
+      break;
+
+    clock.day -= daysInCurrentMonth;
+    clock.month++;
+
+    if (clock.month > 12) {
+      clock.month = 1;
+      clock.year++;
+    }
+  }
+
+  events.push(Event(
+    id,
+    clock.hour,
+    clock.day,
+    clock.month,
+    clock.year
+  ));
+}
+
+// Verifica se o ano informado é bissexto
+bool Schedule::isLeapYear(int year) {
+  return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+}
+
+// Converte a data do clock em horas
+double Schedule::convertToTotalHours(Clock date) {
+  const int daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+  double totalHours = 0.0;
+
+  for (int year = 2000; year < date.year; ++year) 
+    totalHours += (isLeapYear(year) ? 366 : 365) * 24;
+
+  for (int month = 1; month < date.month; ++month) {
+    int daysInCurrentMonth = daysInMonth[month - 1];
+    if (month == 2 && isLeapYear(date.year))
+      daysInCurrentMonth = 29;
+
+    totalHours += daysInCurrentMonth * 24;
+  }
+  totalHours += (date.day - 1) * 24 + date.hour;
+
+  return totalHours;
+}
+
+// Sobrecarga da função anterior para converter o tipo de data Date
+double Schedule::convertToTotalHours(Date date) {
+  const int daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+  double totalHours = 0.0;
+
+  for (int year = 2000; year < date.year; ++year) 
+    totalHours += (isLeapYear(year) ? 366 : 365) * 24;
+
+  for (int month = 1; month < date.month; ++month) {
+    int daysInCurrentMonth = daysInMonth[month - 1];
+    if (month == 2 && isLeapYear(date.year))
+      daysInCurrentMonth = 29;
+
+    totalHours += daysInCurrentMonth * 24;
+  }
+  totalHours += (date.day - 1) * 24 + date.hour;
+
+  return totalHours;
+}
+
+// Mostra as estatísticas
+void Schedule::print() {
+  startSimulation();
   for (int i = 0; i < numberPatients; i++) 
-    patients[i]->Print();
-  
-  //std::cout << clock.day << " " << clock.hour << std::endl;
+    patients[i]->print();
 }

@@ -7,7 +7,7 @@ Procedure::Procedure(double averageTime, int numberUnits) :
   }
 
 // Verifica se tem espaço no procedimento
-int Procedure::HasSpace() {
+int Procedure::hasSpace() {
   if (numberUnits - units.getSize() > 0)
     return numberUnits - units.getSize();
 

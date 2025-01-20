@@ -3,7 +3,6 @@
 
 #include "Vector.hpp"
 #include <stdexcept>
-using namespace std;
 
 struct Event {
   int id;

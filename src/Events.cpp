@@ -1,6 +1,6 @@
 #include "Events.hpp"
 
-// Função de comparação
+// Função de comparação com base no ano, mês, hora e id do paciente
 bool Events::compareEvents(const Event& a, const Event& b) {
   if (a.year != b.year) return a.year < b.year;
   if (a.month != b.month) return a.month < b.month;
@@ -9,6 +9,7 @@ bool Events::compareEvents(const Event& a, const Event& b) {
   return a.id < b.id;
 }
 
+// Função auxiliar swap
 void Events::swap(int a, int b) {
   Event temp = heap[a];
   heap[a] = heap[b];
@@ -21,15 +22,12 @@ void Events::heapifyDown(int index) {
   int left = 2 * index + 1;
   int right = 2 * index + 2;
 
-  // Verifica o filho esquerdo
   if (left < heap.getSize() && compareEvents(heap[left], heap[smallest]))
     smallest = left;
 
-  // Verifica o filho direito
   if (right < heap.getSize() && compareEvents(heap[right], heap[smallest]))
     smallest = right;
 
-  // Se o menor elemento não for o nó atual
   if (smallest != index) {
     swap(index, smallest);
     heapifyDown(smallest);
@@ -52,15 +50,15 @@ void Events::push(const Event& event) {
   heapifyUp(heap.getSize() - 1);
 }
 
-// Retorna o menor evento do heap
+// Retorna o menor evento do heap (topo)
 Event Events::top() {
-  if (heap.getSize() == 0) throw runtime_error("Heap está vazio!");
+  if (heap.getSize() == 0) throw std::runtime_error("Heap está vazio!");
   return heap[0];
 }
 
 // Remove o menor evento do heap
 void Events::pop() {
-  if (heap.getSize() == 0) throw runtime_error("Heap está vazio!");
+  if (heap.getSize() == 0) throw std::runtime_error("Heap está vazio!");
   heap[0] = heap.back();
   heap.pop();
   heapifyDown(0);
