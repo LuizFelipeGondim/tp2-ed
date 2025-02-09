@@ -6,24 +6,11 @@
 
 struct Event {
   int id;
-  double hour;
-  int day;
-  int month;
-  int year;
+  time_t timestamp;
 
-  Event(int id, double h, int d, int m, int a) : 
-    id(id), 
-    hour(h), 
-    day(d), 
-    month(m), 
-    year(a){}
+  Event(int id, time_t h) : id(id), timestamp(h){}
 
-  Event() : 
-    id(0), 
-    hour(0), 
-    day(0), 
-    month(0), 
-    year(0) {}
+  Event() : id(0), timestamp(0){}
 };
 
 class Events {

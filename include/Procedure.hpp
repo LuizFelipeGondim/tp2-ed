@@ -10,10 +10,12 @@ private:
   
 public:
   Vector<Patient*> units;
-  double averageTime;
+  time_t averageTime;
+  time_t tempoEspera = 0;
+  int numPacientes = 0;
   int numberUnits;
 
-  Procedure(double averageTime, int numberUnits);
+  Procedure(time_t averageTime, int numberUnits);
 
   int hasSpace();
 

@@ -2,6 +2,8 @@
 #define SCHEDULE_HPP
 
 #include <iostream>
+#include <ctime>
+#include <iomanip>
 #include <fstream>
 #include "Queue.hpp"
 #include "Events.hpp"
@@ -9,46 +11,38 @@
 #include "Patient.hpp"
 #include "Procedure.hpp"
 
-struct Clock{
-  double hour;
-  int day;
-  int month;
-  int year;
-};
 
 class Schedule {
 private:
   int numberPatients = 0;
-
-  Clock clock;
+  time_t esperaMediaPaciente = 0;
+  time_t esperaMediaUnidade = 0;
+  time_t clock;
   Events events;
   Vector<Procedure*> procedures;
   Vector<Patient*> patients;
 
-  //Fila de triagem
+  // Fila de triagem
   Queue<Patient*> triageQueue;
 
-  //Filas de atendimento
+  // Filas de atendimento
   Queue<Patient*> patientCareMildQueue;
   Queue<Patient*> patientCareModerateQueue;
   Queue<Patient*> patientCareSevereQueue;
 
-  //Filas de pós atendimento
+  // Filas de pós atendimento
   Queue<Patient*> serviceMildQueue;
   Queue<Patient*> serviceModerateQueue;
   Queue<Patient*> serviceSevereQueue;
-
-  void handleTriageQueue(Clock clock);
-  void handlePatientCare(Clock clock);
-  void handleHospitalMeasures(Clock clock);
-  void handleLaboratoryTests(Clock clock);
-  void handleImagingTests(Clock clock);
-  void handleMedicalSupplies(Clock clock);
-
-  bool isLeapYear(int year);
-  void insertEvent(int id, Clock clock, double serviceTime);
-  double convertToTotalHours(Clock date);
-  double convertToTotalHours(Date date);
+  
+  // Funções auxiliares
+  void handleTriageQueue();
+  void handlePatientCareQueue();
+  void handleHospitalMeasuresQueue();
+  void handleLaboratoryTestsQueue();
+  void handleImagingTestsQueue();
+  void handleMedicalSuppliesQueue();
+  Patient* dequeuePatient(int state);
   void startSimulation();
 
 public:
@@ -56,7 +50,8 @@ public:
   Schedule(std::string fileName);
   ~Schedule();
 
-  void print();
+  void estatisticas();
+  void showStatistics();
 };
 
 #endif

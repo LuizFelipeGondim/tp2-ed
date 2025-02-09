@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
       throw std::runtime_error("Erro: Nome do arquivo não especificado.");
     }
     Schedule schedule(fileName);
-    schedule.print();
+    schedule.showStatistics();
   } catch (const std::runtime_error& e) {
     std::cerr << e.what() << std::endl;
   }

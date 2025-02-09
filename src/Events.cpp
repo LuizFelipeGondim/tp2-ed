@@ -1,11 +1,8 @@
 #include "Events.hpp"
 
-// Função de comparação com base no ano, mês, hora e id do paciente
+// Função de comparação com base no timestamp e id do paciente
 bool Events::compareEvents(const Event& a, const Event& b) {
-  if (a.year != b.year) return a.year < b.year;
-  if (a.month != b.month) return a.month < b.month;
-  if (a.day != b.day) return a.day < b.day;
-  if (a.hour != b.hour) return a.hour < b.hour;
+  if (a.timestamp != b.timestamp) return a.timestamp < b.timestamp;
   return a.id < b.id;
 }
 

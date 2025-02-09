@@ -5,48 +5,35 @@
 #include <iomanip>
 #include <string>
 
-struct Date {
-  double hour;
-  int day;
-  int month;
-  int year;
-};
-
 class Patient {
 private:
 
 public:
   int id;
   int discharged;
-  int year;
-  int month;
-  int day;
-  double hour;
+  time_t admission;
   int urgency;
   int hospitalMeasures;
   int laboratoryTests;
   int imagingTests;
   int medicalSupplies;
 
-  Date triageTime;
-  Date patientCareTime;
-  Date hospitalMeasuresTime;
-  Date laboratoryTestsTime;
-  Date imagingTestsTime;
-  Date medicalSuppliesTime;
+  time_t triageTime;
+  time_t patientCareTime;
+  time_t hospitalMeasuresTime;
+  time_t laboratoryTestsTime;
+  time_t imagingTestsTime;
+  time_t medicalSuppliesTime;
 
-  double waitingTime;
-  double serviceTime;
+  time_t waitingTime;
+  time_t serviceTime;
   
   int state;
 
   Patient(
     int id = 0,
     int discharged = 0,
-    int year = 0,
-    int month = 0,
-    int day = 0,
-    double hour = 0.0,
+    time_t admission = 0,
     int urgency = 0,
     int hospitalMeasures = 0,
     int laboratoryTests = 0,
@@ -55,9 +42,6 @@ public:
   );
 
   void print();
-  std::string getMonthName(int month);
-  std::string getWeekdayName(int year, int month, int day);
-  std::string formatHour(double hour);
 };
 
 #endif
